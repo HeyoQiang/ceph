@@ -8,10 +8,9 @@ TEST(PageSet, AllocAligned)
 {
   typedef PageSet<1> page_set;
   page_set pages;
-  page_set::page_vector range;
+  page_set::page_vector range(4);
 
-  pages.alloc_range(0, 4, range);
-  ASSERT_EQ(4u, range.size());
+  pages.alloc_range(0, 4, range.begin(), range.end());
   ASSERT_EQ(0u, range[0]->offset);
   ASSERT_EQ(1u, range[1]->offset);
   ASSERT_EQ(2u, range[2]->offset);
@@ -22,37 +21,34 @@ TEST(PageSet, AllocUnaligned)
 {
   typedef PageSet<2> page_set;
   page_set pages;
-  page_set::page_vector range;
+  page_set::page_vector range(3);
 
   // front of first page
-  pages.alloc_range(0, 1, range);
-  ASSERT_EQ(1u, range.size());
+  pages.alloc_range(0, 1, range.begin(), range.begin() + 1);
   ASSERT_EQ(0u, range[0]->offset);
-  range.clear();
+  range[0].reset();
 
   // back of first page
-  pages.alloc_range(1, 1, range);
-  ASSERT_EQ(1u, range.size());
+  pages.alloc_range(1, 1, range.begin(), range.begin() + 1);
   ASSERT_EQ(0u, range[0]->offset);
-  range.clear();
+  range[0].reset();
 
   // back of first page and front of second
-  pages.alloc_range(1, 2, range);
-  ASSERT_EQ(2u, range.size());
+  pages.alloc_range(1, 2, range.begin(), range.begin() + 2);
   ASSERT_EQ(0u, range[0]->offset);
   ASSERT_EQ(2u, range[1]->offset);
-  range.clear();
+  range[0].reset();
+  range[1].reset();
 
   // back of first page and all of second
-  pages.alloc_range(1, 3, range);
-  ASSERT_EQ(2u, range.size());
+  pages.alloc_range(1, 3, range.begin(), range.begin() + 2);
   ASSERT_EQ(0u, range[0]->offset);
   ASSERT_EQ(2u, range[1]->offset);
-  range.clear();
+  range[0].reset();
+  range[1].reset();
 
   // back of first page, all of second, and front of third
-  pages.alloc_range(1, 4, range);
-  ASSERT_EQ(3u, range.size());
+  pages.alloc_range(1, 4, range.begin(), range.begin() + 3);
   ASSERT_EQ(0u, range[0]->offset);
   ASSERT_EQ(2u, range[1]->offset);
   ASSERT_EQ(4u, range[2]->offset);
@@ -63,8 +59,8 @@ TEST(PageSet, GetAligned)
   // allocate 4 pages
   typedef PageSet<1> page_set;
   page_set pages;
-  page_set::page_vector range;
-  pages.alloc_range(0, 4, range);
+  page_set::page_vector range(4);
+  pages.alloc_range(0, 4, range.begin(), range.end());
   range.clear();
 
   // get first page
@@ -95,8 +91,8 @@ TEST(PageSet, GetUnaligned)
   // allocate 3 pages
   typedef PageSet<2> page_set;
   page_set pages;
-  page_set::page_vector range;
-  pages.alloc_range(0, 6, range);
+  page_set::page_vector range(3);
+  pages.alloc_range(0, 6, range.begin(), range.end());
   range.clear();
 
   // front of first page
@@ -145,9 +141,9 @@ TEST(PageSet, GetHoles)
   // allocate pages at offsets 1, 2, 5, and 7
   typedef PageSet<1> page_set;
   page_set pages;
-  page_set::page_vector range;
+  page_set::page_vector range(1);
   for (uint64_t i : {1, 2, 5, 7})
-    pages.alloc_range(i, 1, range);
+    pages.alloc_range(i, 1, range.begin(), range.end());
   range.clear();
 
   // nothing at offset 0, page at offset 1
@@ -184,8 +180,8 @@ TEST(PageSet, FreeAligned)
   // allocate 4 pages
   typedef PageSet<1> page_set;
   page_set pages;
-  page_set::page_vector range;
-  pages.alloc_range(0, 4, range);
+  page_set::page_vector range(4);
+  pages.alloc_range(0, 4, range.begin(), range.end());
   range.clear();
 
   // get the full range
@@ -217,8 +213,8 @@ TEST(PageSet, FreeUnaligned)
   // allocate 4 pages
   typedef PageSet<2> page_set;
   page_set pages;
-  page_set::page_vector range;
-  pages.alloc_range(0, 8, range);
+  page_set::page_vector range(4);
+  pages.alloc_range(0, 8, range.begin(), range.end());
   range.clear();
 
   // get the full range
@@ -250,9 +246,9 @@ TEST(PageSet, FreeHoles)
   // allocate pages at offsets 1, 2, 5, and 7
   typedef PageSet<1> page_set;
   page_set pages;
-  page_set::page_vector range;
+  page_set::page_vector range(1);
   for (uint64_t i : {1, 2, 5, 7})
-    pages.alloc_range(i, 1, range);
+    pages.alloc_range(i, 1, range.begin(), range.end());
   range.clear();
 
   // get the full range

@@ -67,6 +67,7 @@ noinst_HEADERS += \
 	os/ObjectMap.h \
 	os/ObjectStore.h \
 	os/PageSet.h \
+	os/PartitionedPageSet.h \
 	os/SequencerPosition.h \
 	os/WBThrottle.h \
 	os/XfsFileStoreBackend.h \

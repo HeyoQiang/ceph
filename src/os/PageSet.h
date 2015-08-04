@@ -104,20 +104,6 @@ class PageSet {
     }
   }
 
-  size_t count_pages(uint64_t offset, uint64_t len) const {
-    // count the overlapping pages
-    size_t count = 0;
-    if (offset % PageSize) {
-      count++;
-      size_t rem = PageSize - offset % PageSize;
-      len = len <= rem ? 0 : len - rem;
-    }
-    count += len / PageSize;
-    if (len % PageSize)
-      count++;
-    return count;
-  }
-
   // disable copy
   PageSet(const PageSet&) = delete;
   const PageSet& operator=(const PageSet&) = delete;
@@ -133,14 +119,14 @@ class PageSet {
   size_t size() const { return pages.size(); }
 
   // allocate all pages that intersect the range [offset,length)
-  void alloc_range(uint64_t offset, size_t length, page_vector &range) {
+  void alloc_range(uint64_t offset, size_t length,
+                   typename page_vector::iterator range_begin,
+                   typename page_vector::iterator range_end) {
     // loop in reverse so we can provide hints to avl_set::insert_check()
     //	and get O(1) insertions after the first
     uint64_t position = offset + length - 1;
 
-    auto range_begin = range.rbegin();
-    range.resize(range.size() + count_pages(offset, length));
-    auto out = range.rbegin();
+    typename page_vector::reverse_iterator out(range_end);
 
     std::lock_guard<lock_type> lock(mutex);
     iterator cur = pages.end();
@@ -175,7 +161,7 @@ class PageSet {
       length -= c;
     }
     // make sure we sized the vector correctly
-    assert(out == range_begin);
+    assert(out == typename page_vector::reverse_iterator(range_begin));
   }
 
   // return all allocated pages that intersect the range [offset,length)

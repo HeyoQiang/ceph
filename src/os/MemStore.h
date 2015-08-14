@@ -24,7 +24,7 @@
 #include "common/RefCountedObj.h"
 #include "common/RWLock.h"
 #include "ObjectStore.h"
-#include "PageSet.h"
+#include "PartitionedPageSet.h"
 #include "include/assert.h"
 
 class MemStore : public ObjectStore {
@@ -118,7 +118,7 @@ public:
 
   struct PageSetObject : public Object {
     static const size_t PageSize = 64 << 10;
-    typedef PageSet<PageSize> page_set;
+    typedef PartitionedPageSet<PageSize> page_set;
 
     page_set data;
     size_t data_len;
@@ -127,7 +127,10 @@ public:
     // can avoid allocations in read/write()
     static thread_local typename page_set::page_vector tls_pages;
 
-    PageSetObject() : data_len(0) {}
+    PageSetObject(CephContext *cct)
+      : data(cct->_conf->memstore_page_partitions,
+             cct->_conf->memstore_pages_per_stripe),
+        data_len(0) {}
 
     size_t get_size() const override { return data_len; }
 
@@ -154,6 +157,7 @@ public:
   };
 
   struct Collection : public RefCountedObject {
+    CephContext *cct;
     bool use_page_set;
     ceph::unordered_map<ghobject_t, ObjectRef> object_hash;  ///< for lookup
     map<ghobject_t, ObjectRef> object_map;        ///< for iteration
@@ -166,7 +170,7 @@ public:
 
     ObjectRef create_object() const {
       if (use_page_set)
-        return new PageSetObject();
+        return new PageSetObject(cct);
       return new BufferlistObject();
     }
 
@@ -232,7 +236,8 @@ public:
     }
 
     Collection(CephContext *cct)
-      : use_page_set(cct->_conf->memstore_page_set),
+      : cct(cct),
+        use_page_set(cct->_conf->memstore_page_set),
         lock("MemStore::Collection::lock") {}
   };
   typedef Collection::Ref CollectionRef;

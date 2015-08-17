@@ -581,6 +581,7 @@ void PGLog::merge_log(ObjectStore::Transaction& t,
     dout(10) << "merge_log extending tail to " << olog.tail << dendl;
     list<pg_log_entry_t>::iterator from = olog.log.begin();
     list<pg_log_entry_t>::iterator to;
+    eversion_t last;
     for (to = from;
 	 to != olog.log.end();
 	 ++to) {
@@ -588,12 +589,10 @@ void PGLog::merge_log(ObjectStore::Transaction& t,
 	break;
       log.index(*to);
       dout(15) << *to << dendl;
+      last = to->version;
     }
-      
-    if (to == olog.log.end())
-      mark_dirty_to(oinfo.last_update);
-    else
-      mark_dirty_to(to->version);
+    mark_dirty_to(last);
+
     // splice into our log.
     log.log.splice(log.log.begin(),
 		   olog.log, from, to);

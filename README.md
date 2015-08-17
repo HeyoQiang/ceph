@@ -56,19 +56,10 @@ CMake
 Prerequisite:
         CMake 2.8.11
 
-In tree build instructions:
-
         mkdir build
         cd build
-	cmake [options] ..
-	make
-
-Out of tree build instructions:
-
-        mkdir build
-        cd build
-	cmake [options] /path/to/ceph/src/dir
-	make
+        cmake [options] ../path/to/ceph/src/dir
+        make
 
 Dependencies
 ------------

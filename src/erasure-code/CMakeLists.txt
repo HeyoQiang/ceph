@@ -4,6 +4,8 @@ set(erasure_codelibdir ${LIBRARY_OUTPUT_PATH}/erasure-code)
 
 add_subdirectory(jerasure)
 add_subdirectory(lrc)
+add_subdirectory(isa)
+add_subdirectory(shec)
 
 if (WITH_BETTER_YASM_ELF64) # TODO: check for yasm support
   add_subdirectory(isa)

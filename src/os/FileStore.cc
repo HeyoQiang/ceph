@@ -2921,7 +2921,8 @@ int FileStore::read(
     memset(&st, 0, sizeof(struct stat));
     int r = ::fstat(**fd, &st);
     assert(r == 0);
-    len = st.st_size;
+    assert(offset < st.st_size);
+    len = st.st_size - offset;
   }
 
 #ifdef HAVE_POSIX_FADVISE
